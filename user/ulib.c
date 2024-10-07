@@ -145,3 +145,19 @@ memcpy(void *dst, const void *src, uint n)
 {
   return memmove(dst, src, n);
 }
+
+uint
+rng(void)
+{
+  static uint seed = 1729;
+  seed ^= seed << 13;
+  seed ^= seed >> 17;
+  seed ^= seed << 5;
+  return seed;
+}
+
+uint
+rng_range(uint min, uint max)
+{
+  return min + rng() % (max - min + 1);
+}
