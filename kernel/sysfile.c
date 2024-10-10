@@ -503,3 +503,42 @@ sys_pipe(void)
   }
   return 0;
 }
+
+uint64
+sys_lseek(void)
+{
+  int old_off;
+  int fd, off, whence;
+  struct file* f;
+
+  if (argfd(0, &fd, &f) < 0)
+    return -1;
+  argint(1, &off);
+  argint(2, &whence);
+
+  old_off = f->off;
+  switch(whence) {
+  case SEEK_SET:
+    f->off = off;
+    break;
+  case SEEK_CUR:
+    f->off += off;
+    break;
+  case SEEK_END:
+    acquiresleep(&f->ip->lock);
+    f->off = f->ip->size + off;
+    releasesleep(&f->ip->lock);
+    break;
+  default:
+    return -1;
+  }
+
+  acquiresleep(&f->ip->lock);
+  if (f->off < 0 || f->ip->size <= f->off) {
+    releasesleep(&f->ip->lock);
+    f->off = old_off;
+    return -1;
+  }
+  releasesleep(&f->ip->lock);
+  return f->off;
+}
