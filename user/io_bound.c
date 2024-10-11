@@ -6,6 +6,12 @@
 #define NCHAR 100
 #define NSWAP 50
 
+void
+putc(int fd, char c)
+{
+  write(fd, &c, 1);  
+}
+
 int
 main(int argc, char** argv)
 {
@@ -15,14 +21,33 @@ main(int argc, char** argv)
     exit(1);
 
   for (int i = 0; i < NLINES; i++) {
-    char buf[NCHAR + 1];
-    for (int j = 0; j < NCHAR; j++)
-      buf[j] = rng_range(33, 126);
-    buf[NCHAR] = '\n';
-    write(fd, buf, NCHAR + 1);
+    putc(fd, '0' + i);
+    for (int j = 1; j < NCHAR; j++)
+      putc(fd, rng_range(33, 126));
+    putc(fd, '\n');
   }
   
-  // TODO: Add swap 50 random lines. May have to implement file seek. I did not found in the source code.
+  // TODO: Add swap 50 random lines.
+  for (int it = 0; it < NSWAP; it++) {
+    int i = rng_range(0, NLINES - 1); 
+    int j = rng_range(0, NLINES - 2);
+
+    if (j >= i) j++;
+
+    char buf_i[NCHAR], buf_j[NCHAR];
+
+    lseek(fd, i * (NCHAR + 1), SEEK_SET);
+    read(fd, buf_i, NCHAR);
+
+    lseek(fd, j * (NCHAR + 1), SEEK_SET);
+    read(fd, buf_j, NCHAR);
+
+    lseek(fd, i * (NCHAR + 1), SEEK_SET);
+    write(fd, buf_j, NCHAR);
+
+    lseek(fd, j * (NCHAR + 1), SEEK_SET);
+    write(fd, buf_i, NCHAR);
+  }
 
   close(fd);
   exit(0);
