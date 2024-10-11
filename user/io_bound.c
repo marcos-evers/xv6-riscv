@@ -6,6 +6,8 @@
 #define NCHAR 100
 #define NSWAP 50
 
+#define TMP_FILE "tmp"
+
 void
 putc(int fd, char c)
 {
@@ -17,7 +19,7 @@ main(int argc, char** argv)
 {
   int fd;
 
-  if ((fd = open("file", O_RDWR | O_CREATE)) == 0)
+  if ((fd = open(TMP_FILE, O_RDWR | O_CREATE)) == 0)
     exit(1);
 
   for (int i = 0; i < NLINES; i++) {
@@ -27,7 +29,6 @@ main(int argc, char** argv)
     putc(fd, '\n');
   }
   
-  // TODO: Add swap 50 random lines.
   for (int it = 0; it < NSWAP; it++) {
     int i = rng_range(0, NLINES - 1); 
     int j = rng_range(0, NLINES - 2);
@@ -50,5 +51,7 @@ main(int argc, char** argv)
   }
 
   close(fd);
+
+  unlink(TMP_FILE);
   exit(0);
 }
