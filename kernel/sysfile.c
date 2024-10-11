@@ -525,20 +525,20 @@ sys_lseek(void)
     f->off += off;
     break;
   case SEEK_END:
-    acquiresleep(&f->ip->lock);
+    ilock(f->ip);
     f->off = f->ip->size + off;
-    releasesleep(&f->ip->lock);
+    iunlock(f->ip);
     break;
   default:
     return -1;
   }
 
-  acquiresleep(&f->ip->lock);
+  ilock(f->ip);
   if (f->off < 0 || f->ip->size <= f->off) {
-    releasesleep(&f->ip->lock);
+    iunlock(f->ip);
     f->off = old_off;
     return -1;
   }
-  releasesleep(&f->ip->lock);
+  iunlock(f->ip);
   return f->off;
 }
