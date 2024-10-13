@@ -149,7 +149,12 @@ memcpy(void *dst, const void *src, uint n)
 uint
 rng(void)
 {
-  static uint seed = 1729;
+  static uint flag = 0;
+  static uint seed = 0;
+
+  seed = flag ? seed : uptime();
+  flag = 1;
+
   seed ^= seed << 13;
   seed ^= seed >> 17;
   seed ^= seed << 5;
