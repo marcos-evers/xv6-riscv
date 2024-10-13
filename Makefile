@@ -141,6 +141,7 @@ UPROGS=\
 	$U/_zombie\
 	$U/_run_experiment\
 	$U/_io_bound\
+	$U/_cpu_bound\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)
