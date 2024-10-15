@@ -15,6 +15,7 @@
 #include "sleeplock.h"
 #include "file.h"
 #include "fcntl.h"
+#include "metrics.h"
 
 // Fetch the nth word-sized system call argument as a file descriptor
 // and return both the descriptor and the corresponding struct file.
@@ -82,6 +83,7 @@ sys_read(void)
 uint64
 sys_write(void)
 {
+  uint start = metrics_start();
   struct file *f;
   int n;
   uint64 p;
@@ -90,7 +92,7 @@ sys_write(void)
   argint(2, &n);
   if(argfd(0, 0, &f) < 0)
     return -1;
-
+  metrics_end(TIMEIO, start);
   return filewrite(f, p, n);
 }
 

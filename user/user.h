@@ -23,6 +23,7 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int lseek(int, int, int);
+uint64 mtime(uint);
 
 // ulib.c
 int stat(const char*, struct stat*);

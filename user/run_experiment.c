@@ -1,15 +1,15 @@
 #include <kernel/types.h>
+#include <kernel/metrics.h>
 #include <user/user.h>
 
-int rng_state = 1729;
-
 int main(int argc, char** argv) {
-  if(argc != 2)
-    exit(1);
-  int n = atoi(argv[1]);
-  printf("%d\n", n);
-  for (uint i = 0; i < n; i++) {
-    printf("%u\n", rng());
+  if (fork() == 0) {
+    char* argv[] = {"io_bound", "tmp", 0};
+    exec("io_bound", argv);
+  } else {
+    wait(0);
+    printf("fuck\n");
+    printf("%ld\n", mtime(TIMEIO));
   }
   exit(0);
 }
