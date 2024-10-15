@@ -9,6 +9,7 @@ struct sleeplock;
 struct stat;
 struct superblock;
 struct timemetric;
+struct tpmetric;
 
 // bio.c
 void            binit(void);
@@ -78,7 +79,7 @@ int             piperead(struct pipe*, uint64, int);
 int             pipewrite(struct pipe*, uint64, int);
 
 // printf.c
-int            printf(char*, ...) __attribute__ ((format (printf, 1, 2)));
+int             printf(char*, ...) __attribute__ ((format (printf, 1, 2)));
 void            panic(char*) __attribute__((noreturn));
 void            printfinit(void);
 
@@ -190,6 +191,9 @@ void            virtio_disk_intr(void);
 uint            metrics_start(void);
 void            metrics_end(uint, uint);
 uint64          metrics_gettimenorm(uint);
+int             incr_tick();
+void            sec_update();
+void            incr_exited_procs();
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
