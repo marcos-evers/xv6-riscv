@@ -168,6 +168,10 @@ clockintr()
     ticks++;
     wakeup(&ticks);
     release(&tickslock);
+
+    if(incr_tick()) {
+      sec_update();
+    }
   }
 
   // ask for the next timer interrupt. this also clears
