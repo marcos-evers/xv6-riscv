@@ -17,16 +17,23 @@ putc(int fd, char c)
 int
 main(int argc, char** argv)
 {
+  char c[255];
   int fd;
+
+  if (argc < 2) strcpy(c, TMP_FILE);
+  else strcpy(c, argv[1]);
 
   if ((fd = open(TMP_FILE, O_RDWR | O_CREATE)) == 0)
     exit(1);
 
   for (int i = 0; i < NLINES; i++) {
-    putc(fd, '0' + i);
-    for (int j = 1; j < NCHAR; j++)
-      putc(fd, rng_range(33, 126));
-    putc(fd, '\n');
+    char buf[NCHAR + 1];
+
+    for (int j = 0; j < NCHAR; j++)
+      buf[j] = rng_range(33, 126);
+    buf[NCHAR] = '\n';
+
+    write(fd, buf, NCHAR + 1);
   }
   
   for (int it = 0; it < NSWAP; it++) {
