@@ -8,7 +8,6 @@ int main(int argc, char** argv) {
     exec("io_bound", argv);
   } else {
     wait(0);
-    printf("fuck\n");
     printf("%ld\n", mtime(TIMEIO));
   }
   exit(0);

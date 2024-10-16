@@ -83,7 +83,7 @@ sys_read(void)
 uint64
 sys_write(void)
 {
-  uint start = metrics_start();
+  uint64 start = metrics_start();
   struct file *f;
   int n;
   uint64 p;

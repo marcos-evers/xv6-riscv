@@ -5,10 +5,9 @@
 #define THROUGHPUT 0
 
 struct timemetric {
-  uint64 avg;
-
-  uint min;
-  uint max;
+  uint64 total;
+  uint64 min;
+  uint64 max;
   uint num;
 };
 
