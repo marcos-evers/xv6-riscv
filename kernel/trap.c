@@ -169,9 +169,7 @@ clockintr()
     wakeup(&ticks);
     release(&tickslock);
 
-    if(incr_tick()) {
-      sec_update();
-    }
+    metrics_tick();
   }
 
   // ask for the next timer interrupt. this also clears

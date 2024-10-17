@@ -10,7 +10,7 @@ struct timemetric tmtable[] = {
 };
 
 struct tpmetric tptable[] = {
-	[THROUGHPUT] {0, 0, 0, 0, 0, 0}
+	[THROUGHPUT] {0, 0, 0, 0, 0}
 };
 
 static uint64
@@ -47,47 +47,25 @@ metrics_gettimenorm(uint t) {
   return norm;
 }
 
-struct tpmetric *
-get_tpmetric() {
-	return &tptable[THROUGHPUT];
-}
-
-int
-incr_tick() {
-	struct tpmetric *tpmetric = get_tpmetric();
+void
+metrics_tick()
+{
+	struct tpmetric *tpmetric = &tptable[THROUGHPUT];
+  uint tp = tpmetric->exited_procs;
 
 	++tpmetric->tick_count;
+  tpmetric->total_exited_procs += tp;
+  tpmetric->exited_procs = 0;
 
-	if(tpmetric->tick_count >= 10) {
-		tpmetric->tick_count = 0;
-		return 1;
+	if (tpmetric->tick_count == 1 && tp < tpmetric->min) {
+		tpmetric->min = tp;
+	} else if (tpmetric->tick_count == 1 && tp > tpmetric->max) {
+		tpmetric->max = tp;
 	}
-
-	return 0;
 }
 
 void
-sec_update() {
-	struct tpmetric *tpmetric = get_tpmetric();
-
-	uint64 throughput = tpmetric->sec_exited_procs;
-	if (tpmetric->total_sec == 1) {
-		tpmetric->min = throughput;
-		tpmetric->max = throughput;
-	}
-	else if (throughput < tpmetric->min) {
-		tpmetric->min = throughput;
-	}
-	else if (throughput > tpmetric->max) {
-		tpmetric->max = throughput;
-	}
-
-	++tpmetric->total_sec;
-	tpmetric->total_exited_procs += throughput;
-	tpmetric->sec_exited_procs = 0;
-}
-
-void
-incr_exited_procs() {
-	++get_tpmetric()->sec_exited_procs;
+metrics_proc_exited()
+{
+	++tptable[THROUGHPUT].exited_procs;
 }

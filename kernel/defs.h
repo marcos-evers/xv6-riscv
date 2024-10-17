@@ -191,9 +191,8 @@ void            virtio_disk_intr(void);
 uint64          metrics_start(void);
 void            metrics_end(uint, uint64);
 uint64          metrics_gettimenorm(uint);
-int             incr_tick();
-void            sec_update();
-void            incr_exited_procs();
+void            metrics_tick(void);
+void            metrics_proc_exited();
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))

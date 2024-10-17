@@ -13,10 +13,7 @@ struct timemetric {
 
 struct tpmetric {
 	uint tick_count;
-
-	uint sec_exited_procs;
-
+	uint exited_procs;
 	uint min, max;
-	uint total_sec;
 	uint total_exited_procs;
 };
