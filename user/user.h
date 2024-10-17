@@ -24,6 +24,7 @@ int sleep(int);
 int uptime(void);
 int lseek(int, int, int);
 uint64 mtime(uint);
+void mrestart(void);
 
 // ulib.c
 int stat(const char*, struct stat*);

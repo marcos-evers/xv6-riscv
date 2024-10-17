@@ -83,7 +83,7 @@ sys_read(void)
 uint64
 sys_write(void)
 {
-  uint64 start = metrics_start();
+  uint64 start = metrics_tstart();
   struct file *f;
   int n;
   uint64 p;
@@ -92,7 +92,7 @@ sys_write(void)
   argint(2, &n);
   if(argfd(0, 0, &f) < 0)
     return -1;
-  metrics_end(TIMEIO, start);
+  metrics_tend(TIMEIO, start);
   return filewrite(f, p, n);
 }
 
