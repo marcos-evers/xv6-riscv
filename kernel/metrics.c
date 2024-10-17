@@ -19,20 +19,33 @@ gettime()
   return r_time();
 }
 
+void
+metrics_restart()
+{
+  tmtable[TIMEIO] = (struct timemetric) {0, 0, 0, 0};
+  tmtable[TIMEFS] = (struct timemetric) {0, 0, 0, 0};
+  tmtable[TIMEMM] = (struct timemetric) {0, 0, 0, 0};
+
+	tptable[THROUGHPUT] = (struct tpmetric) {0, 0, 0, 0, 0};
+}
+
 uint64
-metrics_start(void)
+metrics_tstart(void)
 {
   return gettime();
 }
 
 void
-metrics_end(uint t, uint64 start)
+metrics_tend(uint t, uint64 start)
 {
+  struct timemetric* tm = &tmtable[t];
+
   uint64 end = gettime();
   uint64 tot = end - start;
-  struct timemetric* tm = &tmtable[t];
+
   tm->num++;
   tm->total += tot;
+
   if (tm->num == 1 || tot < tm->min)
     tm->min = tot;
   if (tm->num == 1 || tot > tm->max)
@@ -57,11 +70,10 @@ metrics_tick()
   tpmetric->total_exited_procs += tp;
   tpmetric->exited_procs = 0;
 
-	if (tpmetric->tick_count == 1 && tp < tpmetric->min) {
+	if (tpmetric->tick_count == 1 || tp < tpmetric->min)
 		tpmetric->min = tp;
-	} else if (tpmetric->tick_count == 1 && tp > tpmetric->max) {
+  if (tpmetric->tick_count == 1 || tp > tpmetric->max)
 		tpmetric->max = tp;
-	}
 }
 
 void

@@ -188,8 +188,9 @@ void            virtio_disk_rw(struct buf *, int);
 void            virtio_disk_intr(void);
 
 // metrics.c
-uint64          metrics_start(void);
-void            metrics_end(uint, uint64);
+void            metrics_restart(void);
+uint64          metrics_tstart(void);
+void            metrics_tend(uint, uint64);
 uint64          metrics_gettimenorm(uint);
 void            metrics_tick(void);
 void            metrics_proc_exited();
