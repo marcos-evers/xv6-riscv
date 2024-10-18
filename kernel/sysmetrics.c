@@ -5,7 +5,7 @@
 uint64
 sys_mreset(void)
 {
-  metrics_restart();
+  metrics_reset();
   return 0;
 }
 

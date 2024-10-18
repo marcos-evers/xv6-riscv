@@ -69,31 +69,49 @@ sys_dup(void)
 uint64
 sys_read(void)
 {
+  uint64 start, end;
+
   struct file *f;
   int n;
+  int ret = -1;
   uint64 p;
 
   argaddr(1, &p);
   argint(2, &n);
   if(argfd(0, 0, &f) < 0)
     return -1;
-  return fileread(f, p, n);
+
+  start = r_time();
+  ret = fileread(f, p, n); 
+  end = r_time();
+
+  metrics_timeadd(TIMEIO, start - end);
+
+  return ret;
 }
 
 uint64
 sys_write(void)
 {
-  uint64 start = metrics_tstart();
+  uint64 start, end;
+
   struct file *f;
   int n;
+  int ret = -1;
   uint64 p;
   
   argaddr(1, &p);
   argint(2, &n);
   if(argfd(0, 0, &f) < 0)
     return -1;
-  metrics_tend(TIMEIO, start);
-  return filewrite(f, p, n);
+
+  start = r_time();
+  ret = filewrite(f, p, n);
+  end = r_time();
+
+  metrics_timeadd(TIMEIO, start - end);
+
+  return ret;
 }
 
 uint64

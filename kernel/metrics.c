@@ -13,14 +13,8 @@ struct tpmetric tptable[] = {
 	[THROUGHPUT] {0, 0, 0, 0, 0}
 };
 
-static uint64
-gettime()
-{
-  return r_time();
-}
-
 void
-metrics_restart()
+metrics_reset()
 {
   tmtable[TIMEIO] = (struct timemetric) {0, 0, 0, 0};
   tmtable[TIMEFS] = (struct timemetric) {0, 0, 0, 0};
@@ -29,34 +23,24 @@ metrics_restart()
 	tptable[THROUGHPUT] = (struct tpmetric) {0, 0, 0, 0, 0};
 }
 
-uint64
-metrics_tstart(void)
-{
-  return gettime();
-}
-
 void
-metrics_tend(uint t, uint64 start)
+metrics_timeadd(uint t, uint64 time)
 {
   struct timemetric* tm = &tmtable[t];
 
-  uint64 end = gettime();
-  uint64 tot = end - start;
-
   tm->num++;
-  tm->total += tot;
+  tm->total += time;
 
-  if (tm->num == 1 || tot < tm->min)
-    tm->min = tot;
-  if (tm->num == 1 || tot > tm->max)
-    tm->max = tot;
+  if (tm->num == 1 || time < tm->min)
+    tm->min = time;
+  if (tm->num == 1 || time > tm->max)
+    tm->max = time;
 }
 
 uint64
 metrics_gettimenorm(uint t) {
   struct timemetric* tm = &tmtable[t];
-  printf("%ld %ld %ld %d\n", tm->total, tm->min, tm->max, tm->num);
-  uint64 norm = (tm->num * tm->max - tm->total) / (tm->num * (tm->max - tm->min));
+  uint64 norm = (1000 * (tm->num * tm->max - tm->total)) / (tm->num * (tm->max - tm->min));
   return norm;
 }
 
@@ -70,10 +54,10 @@ metrics_tick()
   tpmetric->total_exited_procs += tp;
   tpmetric->exited_procs = 0;
 
-	if (tpmetric->tick_count == 1 || tp < tpmetric->min)
-		tpmetric->min = tp;
+  if (tpmetric->tick_count == 1 || tp < tpmetric->min)
+    tpmetric->min = tp;
   if (tpmetric->tick_count == 1 || tp > tpmetric->max)
-		tpmetric->max = tp;
+    tpmetric->max = tp;
 }
 
 void

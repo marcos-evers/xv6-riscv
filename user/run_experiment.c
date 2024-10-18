@@ -37,12 +37,13 @@ main(int argc, char** argv)
   for (int i = 1; i <= NROUNDS; i++) {
     uint ncpu = rng_range(6, 14);
     uint nio = 20 - ncpu;
+    uint latio;
 
     printf("[ROUND #%d] ", i);
     printf("%d cpu bound process; ", ncpu);
     printf("%d io bound process\n", nio);
 
-    // TODO: reset metrics
+    mreset();
 
     spawn_cpubound(ncpu);
     spawn_iobound(nio);
@@ -50,7 +51,8 @@ main(int argc, char** argv)
     for (uint num = 0; num < NPROC; num++)
       wait(0);
 
-    // TODO: calc and show system metrics
+    latio = mtime(TIMEIO);
+    printf("%d.%d%%\n", latio/10, latio%10);
   }
   exit(0);
 }
