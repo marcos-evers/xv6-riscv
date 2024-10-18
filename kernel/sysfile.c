@@ -70,10 +70,10 @@ uint64
 sys_read(void)
 {
   uint64 start, end;
+  int ret = -1;
 
   struct file *f;
   int n;
-  int ret = -1;
   uint64 p;
 
   argaddr(1, &p);
@@ -85,7 +85,7 @@ sys_read(void)
   ret = fileread(f, p, n); 
   end = r_time();
 
-  metrics_timeadd(TIMEIO, start - end);
+  metrics_timeadd(TIMEIO, end - start);
 
   return ret;
 }
@@ -93,11 +93,10 @@ sys_read(void)
 uint64
 sys_write(void)
 {
-  uint64 start, end;
+  uint64 start, end, ret;
 
   struct file *f;
   int n;
-  int ret = -1;
   uint64 p;
   
   argaddr(1, &p);
@@ -109,7 +108,7 @@ sys_write(void)
   ret = filewrite(f, p, n);
   end = r_time();
 
-  metrics_timeadd(TIMEIO, start - end);
+  metrics_timeadd(TIMEIO, end - start);
 
   return ret;
 }
@@ -143,12 +142,15 @@ sys_fstat(void)
 uint64
 sys_link(void)
 {
+  uint64 start, end;
+
   char name[DIRSIZ], new[MAXPATH], old[MAXPATH];
   struct inode *dp, *ip;
 
   if(argstr(0, old, MAXPATH) < 0 || argstr(1, new, MAXPATH) < 0)
     return -1;
 
+  start = r_time();
   begin_op();
   if((ip = namei(old)) == 0){
     end_op();
@@ -177,6 +179,9 @@ sys_link(void)
   iput(ip);
 
   end_op();
+  end = r_time();
+
+  metrics_timeadd(TIMEFS, end - start);
 
   return 0;
 
@@ -208,6 +213,8 @@ isdirempty(struct inode *dp)
 uint64
 sys_unlink(void)
 {
+  uint64 start, end;
+
   struct inode *ip, *dp;
   struct dirent de;
   char name[DIRSIZ], path[MAXPATH];
@@ -216,6 +223,7 @@ sys_unlink(void)
   if(argstr(0, path, MAXPATH) < 0)
     return -1;
 
+  start = r_time();
   begin_op();
   if((dp = nameiparent(path, name)) == 0){
     end_op();
@@ -253,6 +261,9 @@ sys_unlink(void)
   iunlockput(ip);
 
   end_op();
+  end = r_time();
+
+  metrics_timeadd(TIMEFS, end - start);
 
   return 0;
 
@@ -324,6 +335,8 @@ create(char *path, short type, short major, short minor)
 uint64
 sys_open(void)
 {
+  uint64 start, end;
+
   char path[MAXPATH];
   int fd, omode;
   struct file *f;
@@ -334,6 +347,7 @@ sys_open(void)
   if((n = argstr(0, path, MAXPATH)) < 0)
     return -1;
 
+  start = r_time();
   begin_op();
 
   if(omode & O_CREATE){
@@ -386,6 +400,9 @@ sys_open(void)
 
   iunlock(ip);
   end_op();
+  end = r_time();
+
+  metrics_timeadd(TIMEFS, end - start);
 
   return fd;
 }
@@ -393,9 +410,12 @@ sys_open(void)
 uint64
 sys_mkdir(void)
 {
+  uint64 start, end;
+
   char path[MAXPATH];
   struct inode *ip;
 
+  start = r_time();
   begin_op();
   if(argstr(0, path, MAXPATH) < 0 || (ip = create(path, T_DIR, 0, 0)) == 0){
     end_op();
@@ -403,6 +423,10 @@ sys_mkdir(void)
   }
   iunlockput(ip);
   end_op();
+  end = r_time();
+
+  metrics_timeadd(TIMEFS, end - start);
+
   return 0;
 }
 

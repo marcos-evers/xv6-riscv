@@ -4,6 +4,7 @@
 
 #define THROUGHPUT 0
 
+// TODO add locks
 struct timemetric {
   uint64 total;
   uint64 min;
@@ -11,6 +12,7 @@ struct timemetric {
   uint num;
 };
 
+// TODO add locks
 struct tpmetric {
 	uint tick_count;
 	uint exited_procs;

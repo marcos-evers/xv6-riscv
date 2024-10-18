@@ -2,8 +2,8 @@
 #include <kernel/metrics.h>
 #include <user/user.h>
 
-#define NROUNDS 30
-#define NPROC 20
+#define NROUNDS 10
+#define NPROC 10
 
 void
 spawn_cpubound(uint ncpu)
@@ -35,9 +35,8 @@ int
 main(int argc, char** argv)
 {
   for (int i = 1; i <= NROUNDS; i++) {
-    uint ncpu = rng_range(6, 14);
-    uint nio = 20 - ncpu;
-    uint latio;
+    uint ncpu = rng_range(3 * NPROC / 10, 7 * NPROC / 10);
+    uint nio = NPROC - ncpu;
 
     printf("[ROUND #%d] ", i);
     printf("%d cpu bound process; ", ncpu);
@@ -51,8 +50,8 @@ main(int argc, char** argv)
     for (uint num = 0; num < NPROC; num++)
       wait(0);
 
-    latio = mtime(TIMEIO);
-    printf("%d.%d%%\n", latio/10, latio%10);
+    printf("1000 * T_lat = %ld\n", mtime(TIMEIO));
+    printf("1000 * E_fs = %ld\n", mtime(TIMEFS));
   }
   exit(0);
 }
