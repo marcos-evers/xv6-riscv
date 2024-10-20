@@ -8,12 +8,6 @@
 
 #define TMP_FILE "tmp"
 
-void
-putc(int fd, char c)
-{
-  write(fd, &c, 1);  
-}
-
 int
 main(int argc, char** argv)
 {
@@ -23,14 +17,14 @@ main(int argc, char** argv)
   if (argc < 2) strcpy(c, TMP_FILE);
   else strcpy(c, argv[1]);
 
-  if ((fd = open(TMP_FILE, O_RDWR | O_CREATE)) == 0)
+  if ((fd = open(c, O_RDWR | O_CREATE)) == 0)
     exit(1);
 
   for (int i = 0; i < NLINES; i++) {
     char buf[NCHAR + 1];
 
     for (int j = 0; j < NCHAR; j++)
-      buf[j] = rng_range(33, 126);
+      buf[j] = rng_range('!', '~');
     buf[NCHAR] = '\n';
 
     write(fd, buf, NCHAR + 1);
