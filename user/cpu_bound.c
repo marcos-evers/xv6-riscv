@@ -60,8 +60,8 @@ gendigraph()
     uint u, v;
 
     do {
-       u = rng_range(0, n - 1);
-       v = rng_range(0, n - 1);
+      u = rng_range(0, n - 1);
+      v = rng_range(0, n - 1);
     } while (u == v || adj[n * u + v]);
 
     adj[n * u + v] = 1;
