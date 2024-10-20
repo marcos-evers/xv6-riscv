@@ -1,9 +1,10 @@
 #include <kernel/types.h>
+#include <kernel/spinlock.h>
 #include <kernel/metrics.h>
 #include <user/user.h>
 
-#define NROUNDS 10
-#define NPROC 10
+#define NROUNDS 30
+#define NPROC 20
 
 void
 spawn_cpubound(uint ncpu)
@@ -35,8 +36,8 @@ int
 main(int argc, char** argv)
 {
   for (int i = 1; i <= NROUNDS; i++) {
-    uint ncpu = rng_range(3 * NPROC / 10, 7 * NPROC / 10);
-    uint nio = NPROC - ncpu;
+    uint ncpu = rng_range(3 * NPROC / 10, 7 * NPROC / 10); // X
+    uint nio = NPROC - ncpu; // Y
 
     printf("[ROUND #%d] ", i);
     printf("%d cpu bound process; ", ncpu);
