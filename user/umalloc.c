@@ -2,6 +2,7 @@
 #include "kernel/stat.h"
 #include "user/user.h"
 #include "kernel/param.h"
+#include "kernel/metrics.h"
 
 // Memory allocator by Kernighan and Ritchie,
 // The C programming Language, 2nd ed.  Section 8.7.
@@ -24,6 +25,10 @@ static Header *freep;
 void
 free(void *ap)
 {
+  uint64 start, end;
+
+  start = r_time();
+
   Header *bp, *p;
 
   bp = (Header*)ap - 1;
@@ -41,6 +46,9 @@ free(void *ap)
   } else
     p->s.ptr = bp;
   freep = p;
+
+  end = r_time();
+  metrics_timeadd(TIMEMM, end - start);
 }
 
 static Header*
@@ -63,6 +71,10 @@ morecore(uint nu)
 void*
 malloc(uint nbytes)
 {
+  uint64 start, end;
+
+  start = r_time();
+
   Header *p, *prevp;
   uint nunits;
 
@@ -81,10 +93,22 @@ malloc(uint nbytes)
         p->s.size = nunits;
       }
       freep = prevp;
+
+      end = r_time();
+      metrics_timeadd(TIMEMM, end - start);
+
       return (void*)(p + 1);
     }
     if(p == freep)
-      if((p = morecore(nunits)) == 0)
+      if ((p = morecore(nunits)) == 0)
+      {
+        end = r_time();
+        metrics_timeadd(TIMEMM, end - start);
+
         return 0;
+      }
   }
+
+  end = r_time();
+  metrics_timeadd(TIMEMM, end - start);
 }

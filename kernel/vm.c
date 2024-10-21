@@ -5,6 +5,7 @@
 #include "riscv.h"
 #include "defs.h"
 #include "fs.h"
+#include "metrics.h"
 
 /*
  * the kernel's page table.
@@ -85,6 +86,10 @@ kvminithart()
 pte_t *
 walk(pagetable_t pagetable, uint64 va, int alloc)
 {
+  uint64 start, end;
+
+  start = r_time();
+
   if(va >= MAXVA)
     panic("walk");
 
@@ -93,12 +98,20 @@ walk(pagetable_t pagetable, uint64 va, int alloc)
     if(*pte & PTE_V) {
       pagetable = (pagetable_t)PTE2PA(*pte);
     } else {
-      if(!alloc || (pagetable = (pde_t*)kalloc()) == 0)
+      if (!alloc || (pagetable = (pde_t *)kalloc()) == 0)
+      {
+        end = r_time();
+        metrics_timeadd(TIMEMM, end - start);
         return 0;
+      }
       memset(pagetable, 0, PGSIZE);
       *pte = PA2PTE(pagetable) | PTE_V;
     }
   }
+
+  end = r_time();
+  metrics_timeadd(TIMEMM, end - start);
+
   return &pagetable[PX(0, va)];
 }
 
