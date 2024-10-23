@@ -86,6 +86,7 @@ sys_read(void)
   end = r_time();
 
   metrics_timeadd(TIMEIO, end - start);
+  metrics_timeadd(TIMEFS, end - start);
 
   return ret;
 }
@@ -109,6 +110,7 @@ sys_write(void)
   end = r_time();
 
   metrics_timeadd(TIMEIO, end - start);
+  metrics_timeadd(TIMEFS, end - start);
 
   return ret;
 }
@@ -116,13 +118,20 @@ sys_write(void)
 uint64
 sys_close(void)
 {
+  uint start, end;
   int fd;
   struct file *f;
 
   if(argfd(0, &fd, &f) < 0)
     return -1;
   myproc()->ofile[fd] = 0;
+
+  start = r_time();
   fileclose(f);
+  end = r_time();
+
+  metrics_timeadd(TIMEFS, end - start);
+
   return 0;
 }
 
@@ -433,10 +442,12 @@ sys_mkdir(void)
 uint64
 sys_mknod(void)
 {
+  uint start, end;
   struct inode *ip;
   char path[MAXPATH];
   int major, minor;
 
+  start = r_time();
   begin_op();
   argint(1, &major);
   argint(2, &minor);
@@ -447,16 +458,21 @@ sys_mknod(void)
   }
   iunlockput(ip);
   end_op();
+  end = r_time();
+
+  metrics_timeadd(TIMEFS, end - start);
   return 0;
 }
 
 uint64
 sys_chdir(void)
 {
+  uint start, end;
   char path[MAXPATH];
   struct inode *ip;
   struct proc *p = myproc();
   
+  start = r_time();
   begin_op();
   if(argstr(0, path, MAXPATH) < 0 || (ip = namei(path)) == 0){
     end_op();
@@ -472,6 +488,10 @@ sys_chdir(void)
   iput(p->cwd);
   end_op();
   p->cwd = ip;
+  end = r_time();
+
+  metrics_timeadd(TIMEFS, end - start);
+
   return 0;
 }
 
