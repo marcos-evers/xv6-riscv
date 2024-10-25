@@ -26,6 +26,7 @@
 struct {
   struct spinlock lock;
   struct buf buf[NBUF];
+  uint numused;
 
   // clock head
   uint head;
@@ -39,18 +40,11 @@ binit(void)
   initlock(&bcache.lock, "bcache");
 
   // Initialize Clock Pointer
-  bcache.head = 0;
+  bcache.head = bcache.numused = 0;
   for(b = bcache.buf; b < bcache.buf+NBUF; b++){
     initsleeplock(&b->lock, "buffer");
     b->flag = 1;
   }
-}
-
-static void
-incmod(uint* x, uint mod)
-{
-  (*x)++;
-  if (*x == mod) *x = 0;
 }
 
 // Look through buffer cache for block on device dev.
@@ -59,12 +53,14 @@ incmod(uint* x, uint mod)
 static struct buf*
 bget(uint dev, uint blockno)
 {
-  uint nhead, used;
+  uint nhead;
   struct buf *b;
 
   acquire(&bcache.lock);
 
   // Is the block already cached?
+  // TODO: Could be a optimized with hash table
+  // but may be irrelevante for performance
   for(b = bcache.buf; b < bcache.buf+NBUF; b++){
     if(b->dev == dev && b->blockno == blockno){
       b->refcnt++;
@@ -74,12 +70,16 @@ bget(uint dev, uint blockno)
     }
   }
 
+  // Not cached and cache is full
+  if (bcache.numused == NBUF)
+    panic("bget: no buffers");
+
   // Not cached.
-  for(nhead = bcache.head, used = 0; used < NBUF; incmod(&nhead, NBUF)){
+  for(nhead = bcache.head; ; nhead=(nhead+1)%NBUF){
     b = &bcache.buf[nhead];
 
     if (b->refcnt > 0) {
-      used++;
+      ;
     } else if (b->flag == 1) {
       b->flag = 0;
     } else {
@@ -94,7 +94,6 @@ bget(uint dev, uint blockno)
       return b;
     }
   }
-  panic("bget: no buffers");
 }
 
 // Return a locked buf with the contents of the indicated block.
@@ -130,24 +129,13 @@ brelse(struct buf *b)
 
   releasesleep(&b->lock);
 
-  acquire(&bcache.lock);
-  b->refcnt--;
-  // if (b->refcnt == 0) {
-  //   // no one is waiting for it.
-  //   b->next->prev = b->prev;
-  //   b->prev->next = b->next;
-  //   b->next = bcache.head.next;
-  //   b->prev = &bcache.head;
-  //   bcache.head.next->prev = b;
-  //   bcache.head.next = b;
-  // }
-  
-  release(&bcache.lock);
+  bunpin(b);
 }
 
 void
 bpin(struct buf *b) {
   acquire(&bcache.lock);
+  bcache.numused += b->refcnt == 0;
   b->refcnt++;
   release(&bcache.lock);
 }
@@ -156,6 +144,7 @@ void
 bunpin(struct buf *b) {
   acquire(&bcache.lock);
   b->refcnt--;
+  bcache.numused -= b->refcnt == 0;
   release(&bcache.lock);
 }
 
