@@ -83,6 +83,11 @@ int             printf(char*, ...) __attribute__ ((format (printf, 1, 2)));
 void            panic(char*) __attribute__((noreturn));
 void            printfinit(void);
 
+// sched.c
+void            scheduler(void) __attribute__((noreturn));
+void            sched(void);
+
+
 // proc.c
 int             cpuid(void);
 void            exit(int);
@@ -98,8 +103,6 @@ struct cpu*     mycpu(void);
 struct cpu*     getmycpu(void);
 struct proc*    myproc();
 void            procinit(void);
-void            scheduler(void) __attribute__((noreturn));
-void            sched(void);
 void            sleep(void*, struct spinlock*);
 void            userinit(void);
 int             wait(uint64);
