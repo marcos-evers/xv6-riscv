@@ -8,6 +8,31 @@
 
 extern struct proc proc[NPROC];
 
+struct {
+  uint nrunnable;
+  struct proc* proc[NPROC];
+  struct spinlock lock;
+} procpool;
+
+static void
+procswap(uint i, uint j) {
+  if (!holding(&procpool.lock))
+    panic("sched -> procswitch -> not holding lock");
+
+  struct proc* p = procpool.proc[i];
+  procpool.proc[i] = procpool.proc[j];
+  procpool.proc[j] = p;
+}
+
+void
+schedinit()
+{
+  procpool.nrunnable = 0;
+  initlock(&procpool.lock, "procpool");
+  for (uint i = 0; i < NPROC; i++)
+    procpool.proc[i] = &proc[i];
+}
+
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
 // Scheduler never returns.  It loops, doing:
@@ -28,29 +53,26 @@ scheduler(void)
     // processes are waiting.
     intr_on();
 
-    int found = 0;
-    for(p = proc; p < &proc[NPROC]; p++) {
-      acquire(&p->lock);
-      if(p->state == RUNNABLE) {
-        // Switch to chosen process.  It is the process's job
-        // to release its lock and then reacquire it
-        // before jumping back to us.
-        p->state = RUNNING;
-        c->proc = p;
-        swtch(&c->context, &p->context);
-
-        // Process is done running for now.
-        // It should have changed its p->state before coming back.
-        c->proc = 0;
-        found = 1;
-      }
-      release(&p->lock);
-    }
-    if(found == 0) {
+    acquire(&procpool.lock);
+    if(procpool.nrunnable == 0) {
       // nothing to run; stop running on this core until an interrupt.
+      release(&procpool.lock);
       intr_on();
       asm volatile("wfi");
+      continue;
     }
+
+    p = procpool.proc[0];
+    acquire(&p->lock);
+
+    procswap(0, --procpool.nrunnable); 
+    p->state = RUNNING;
+    release(&procpool.lock);
+
+    c->proc = p;
+    swtch(&c->context, &p->context);
+    c->proc = 0;
+    release(&p->lock);
   }
 }
 
@@ -79,4 +101,23 @@ sched(void)
   intena = mycpu()->intena;
   swtch(&p->context, &mycpu()->context);
   mycpu()->intena = intena;
+}
+
+void
+updstate(struct proc *p, uint state)
+{
+  if (!holding(&p->lock)) {
+    panic("update proc state");
+  }
+  if (p->state == state)
+    return; /* nothing to do */
+
+  acquire(&procpool.lock);
+  uint i;
+  for (i = 0; i < NPROC && p != procpool.proc[i]; i++);
+
+  if (p->state == RUNNABLE) procswap(i, --procpool.nrunnable); 
+  else if (state == RUNNABLE) procswap(i, procpool.nrunnable++); 
+  release(&procpool.lock);
+  p->state = state;
 }

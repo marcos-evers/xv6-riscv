@@ -123,7 +123,7 @@ allocproc(void)
 
 found:
   p->pid = allocpid();
-  p->state = USED;
+  updstate(p, USED);
 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
@@ -168,7 +168,7 @@ freeproc(struct proc *p)
   p->chan = 0;
   p->killed = 0;
   p->xstate = 0;
-  p->state = UNUSED;
+  updstate(p, UNUSED);
 }
 
 // Create a user page table for a given process, with no user memory,
@@ -249,7 +249,7 @@ userinit(void)
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
 
-  p->state = RUNNABLE;
+  updstate(p, RUNNABLE);
 
   release(&p->lock);
 }
@@ -319,7 +319,7 @@ fork(void)
   release(&wait_lock);
 
   acquire(&np->lock);
-  np->state = RUNNABLE;
+  updstate(np, RUNNABLE);
   release(&np->lock);
 
   return pid;
@@ -376,7 +376,7 @@ exit(int status)
   acquire(&p->lock);
 
   p->xstate = status;
-  p->state = ZOMBIE;
+  updstate(p, ZOMBIE);
 
   release(&wait_lock);
 
@@ -443,7 +443,7 @@ yield(void)
 {
   struct proc *p = myproc();
   acquire(&p->lock);
-  p->state = RUNNABLE;
+  updstate(p, RUNNABLE);
   sched();
   release(&p->lock);
 }
@@ -491,7 +491,7 @@ sleep(void *chan, struct spinlock *lk)
 
   // Go to sleep.
   p->chan = chan;
-  p->state = SLEEPING;
+  updstate(p, SLEEPING);
 
   sched();
 
@@ -514,7 +514,7 @@ wakeup(void *chan)
     if(p != myproc()){
       acquire(&p->lock);
       if(p->state == SLEEPING && p->chan == chan) {
-        p->state = RUNNABLE;
+        updstate(p, RUNNABLE);
       }
       release(&p->lock);
     }
@@ -535,7 +535,7 @@ kill(int pid)
       p->killed = 1;
       if(p->state == SLEEPING){
         // Wake process from sleep().
-        p->state = RUNNABLE;
+        updstate(p, RUNNABLE);
       }
       release(&p->lock);
       return 0;

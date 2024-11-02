@@ -84,8 +84,10 @@ void            panic(char*) __attribute__((noreturn));
 void            printfinit(void);
 
 // sched.c
+void            schedinit();
 void            scheduler(void) __attribute__((noreturn));
 void            sched(void);
+void            updstate(struct proc*, uint);
 
 
 // proc.c
