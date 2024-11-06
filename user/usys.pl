@@ -38,4 +38,5 @@ entry("sleep");
 entry("uptime");
 entry("lseek");
 entry("mtime");
+entry("mtp");
 entry("mreset");

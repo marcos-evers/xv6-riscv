@@ -195,7 +195,8 @@ void            virtio_disk_intr(void);
 // metrics.c
 void            metrics_reset(void);
 void            metrics_timeadd(uint, uint64);
-uint64          metrics_gettimenorm(uint);
+uint64          metrics_gettime(uint);
+uint64          metrics_gettp(uint);
 void            metrics_tick(void);
 void            metrics_proc_exited();
 
