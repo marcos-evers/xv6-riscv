@@ -51,8 +51,10 @@ main(int argc, char** argv)
     for (uint num = 0; num < NPROC; num++)
       wait(0);
 
-    printf("1000 * T_lat = %ld\n", mtime(TIMEIO));
-    printf("1000 * E_fs = %ld\n", mtime(TIMEFS));
+    printf("10 * T_lat = %ld\n", mtime(TIMEIO));
+    printf("10 * T_mm = %ld\n", mtime(TIMEMM));
+    printf("10 * E_fs = %ld\n", mtime(TIMEFS));
+    printf("10 * T_put = %ld\n", mtp(THROUGHPUT ));
   }
   exit(0);
 }

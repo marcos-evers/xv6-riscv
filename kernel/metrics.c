@@ -15,7 +15,7 @@ struct tpmetric tptable[] = {
 };
 
 void
-metrics_reset()
+metrics_reset(void)
 {
 	tmtable[TIMEIO] = (struct timemetric){0};
 	tmtable[TIMEFS] = (struct timemetric){0};
@@ -23,6 +23,7 @@ metrics_reset()
 
 	tptable[THROUGHPUT] = (struct tpmetric){0};
 
+  // TODO move this to a metrics_init()
 	initlock(&tmtable[TIMEIO].lock, "timeio");
 	initlock(&tmtable[TIMEFS].lock, "timefs");
 	initlock(&tmtable[TIMEMM].lock, "timemm");
@@ -39,23 +40,29 @@ metrics_timeadd(uint t, uint64 time)
 	++tm->num;
 	tm->total += time;
 
-	if (tm->num == 1 || time < tm->min)
-		tm->min = time;
-	if (tm->num == 1 || time > tm->max)
-		tm->max = time;
-
 	release(&tm->lock);
 }
 
 uint64
-metrics_gettimenorm(uint t) {
+metrics_gettime(uint t) {
   struct timemetric* tm = &tmtable[t];
 
 	acquire(&tm->lock);
-	uint64 norm = (1000 * (tm->num * tm->max - tm->total)) / (tm->num * (tm->max - tm->min));
+	uint64 avg = 10 * tm->total / tm->num;
 	release(&tm->lock);
 
-	return norm;
+	return avg;
+}
+
+uint64
+metrics_gettp(uint t) {
+  struct tpmetric* tp = &tptable[t];
+
+	acquire(&tp->lock);
+	uint64 avg = 100 * tp->nexited / tp->ntick;
+	release(&tp->lock);
+
+	return avg;
 }
 
 void
@@ -64,23 +71,13 @@ metrics_tick()
 	struct tpmetric *tpmetric = &tptable[THROUGHPUT];
 
 	acquire(&tpmetric->lock);
-
-  uint tp = tpmetric->exited_procs;
-
-	++tpmetric->tick_count;
-  tpmetric->total_exited_procs += tp;
-  tpmetric->exited_procs = 0;
-
-  if (tpmetric->tick_count == 1 || tp < tpmetric->min)
-    tpmetric->min = tp;
-  if (tpmetric->tick_count == 1 || tp > tpmetric->max)
-    tpmetric->max = tp;
-
+	++tpmetric->ntick;
 	release(&tpmetric->lock);
 }
 
 void
 metrics_proc_exited()
 {
-	++tptable[THROUGHPUT].exited_procs;
+  // TODO add lock acquire here
+	++tptable[THROUGHPUT].nexited;
 }
