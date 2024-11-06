@@ -7,12 +7,21 @@
 #include "defs.h"
 
 extern struct proc proc[NPROC];
+uint64 seed;
 
 struct {
   uint nrunnable;
   struct proc* proc[NPROC];
   struct spinlock lock;
 } procpool;
+
+static uint64
+next() {
+  uint64 z = (seed += 0x9e3779b97f4a7c15);
+	z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9;
+	z = (z ^ (z >> 27)) * 0x94d049bb133111eb;
+	return z ^ (z >> 31);
+}
 
 static void
 procswap(uint i, uint j) {
@@ -25,8 +34,9 @@ procswap(uint i, uint j) {
 }
 
 void
-schedinit()
+schedinit(void)
 {
+  seed = r_time();
   procpool.nrunnable = 0;
   initlock(&procpool.lock, "procpool");
   for (uint i = 0; i < NPROC; i++)
@@ -45,6 +55,7 @@ scheduler(void)
 {
   struct proc *p;
   struct cpu *c = mycpu();
+  uint64 idx;
 
   c->proc = 0;
   for(;;){
@@ -62,10 +73,11 @@ scheduler(void)
       continue;
     }
 
-    p = procpool.proc[0];
+    idx = next() % procpool.nrunnable;
+    p = procpool.proc[idx];
     acquire(&p->lock);
 
-    procswap(0, --procpool.nrunnable); 
+    procswap(idx, --procpool.nrunnable); 
     p->state = RUNNING;
     release(&procpool.lock);
 
