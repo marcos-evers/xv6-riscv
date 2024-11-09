@@ -192,3 +192,15 @@ metrics_get_fairness()
 
 	return result;
 }
+
+uint64
+metrics_get_throughput()
+{
+	struct tpmetric *tp = &tptable[THROUGHPUT];
+
+	acquire(&tp->lock);
+	uint64 norm = (1000 * (tp->tick_count * tp->max - tp->total_exited_procs)) / (tp->tick_count * (tp->max - tp->min));
+	release(&tp->lock);
+
+	return norm;
+}

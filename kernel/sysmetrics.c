@@ -32,3 +32,9 @@ sys_mgetfair(void)
 {
   return metrics_get_fairness();
 }
+
+uint64
+sys_mgetthroughput(void)
+{
+  return metrics_get_throughput();
+}

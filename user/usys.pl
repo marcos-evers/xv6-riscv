@@ -41,3 +41,4 @@ entry("mtime");
 entry("mreset");
 entry("msubsproc");
 entry("mgetfair");
+entry("mgetthroughput");

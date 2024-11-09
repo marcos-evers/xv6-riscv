@@ -27,6 +27,7 @@ uint64 mtime(uint);
 void mreset(void);
 void msubsproc(int);
 uint64 mgetfair(void);
+uint64 mgetthroughput(void);
 
 // ulib.c
 int stat(const char*, struct stat*);
