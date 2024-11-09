@@ -39,3 +39,5 @@ entry("uptime");
 entry("lseek");
 entry("mtime");
 entry("mreset");
+entry("msubsproc");
+entry("mgetfair");
