@@ -26,6 +26,9 @@ int lseek(int, int, int);
 uint64 mtime(uint);
 uint64 mtp(uint);
 void mreset(void);
+void msubsproc(int);
+uint64 mgetfair(void);
+uint64 mgetthroughput(void);
 
 // ulib.c
 int stat(const char*, struct stat*);

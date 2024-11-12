@@ -24,3 +24,6 @@
 #define SYS_mtime  23
 #define SYS_mtp    24
 #define SYS_mreset 25
+#define SYS_msubsproc      25
+#define SYS_mgetfair       26
+#define SYS_mgetthroughput 27

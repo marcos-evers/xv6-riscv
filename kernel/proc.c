@@ -466,10 +466,16 @@ scheduler(void)
         // before jumping back to us.
         p->state = RUNNING;
         c->proc = p;
+
+        metrics_proc_start_cycle(p->pid); // fairness
+
         swtch(&c->context, &p->context);
 
         // Process is done running for now.
         // It should have changed its p->state before coming back.
+
+        metrics_proc_end_cycle(p->pid); // fairness
+
         c->proc = 0;
         found = 1;
       }

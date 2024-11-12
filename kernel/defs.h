@@ -194,6 +194,10 @@ uint64          metrics_gettime(uint);
 uint64          metrics_gettp(uint);
 void            metrics_tick(void);
 void            metrics_proc_exited();
+void            metrics_subscribe_proc(int pid);
+void            metrics_proc_start_cycle(int pid);
+void            metrics_proc_end_cycle(int pid);
+uint64          metrics_get_fairness(void);
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))

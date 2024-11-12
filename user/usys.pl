@@ -40,3 +40,6 @@ entry("lseek");
 entry("mtime");
 entry("mtp");
 entry("mreset");
+entry("msubsproc");
+entry("mgetfair");
+entry("mgetthroughput");

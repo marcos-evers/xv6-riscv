@@ -105,6 +105,9 @@ extern uint64 sys_lseek(void);
 extern uint64 sys_mtime(void);
 extern uint64 sys_mtp(void);
 extern uint64 sys_mreset(void);
+extern uint64 sys_msubsproc(void);
+extern uint64 sys_mgetfair(void);
+extern uint64 sys_mgetthroughput(void);
 
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
@@ -134,6 +137,8 @@ static uint64 (*syscalls[])(void) = {
 [SYS_mtime]   sys_mtime,
 [SYS_mtp]     sys_mtp,
 [SYS_mreset]  sys_mreset,
+[SYS_msubsproc]       sys_msubsproc,
+[SYS_mgetfair]        sys_mgetfair,
 };
 
 void
