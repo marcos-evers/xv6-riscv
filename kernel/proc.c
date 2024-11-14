@@ -380,9 +380,6 @@ exit(int status)
 
   release(&wait_lock);
 
-  // for throughput metric
-  metrics_proc_exited();
-
   // Jump into the scheduler, never to return.
   sched();
   panic("zombie exit");
@@ -467,14 +464,14 @@ scheduler(void)
         p->state = RUNNING;
         c->proc = p;
 
-        metrics_proc_start_cycle(p->pid); // fairness
+        metrics_schedule(p->pid); // fairness
 
         swtch(&c->context, &p->context);
 
         // Process is done running for now.
         // It should have changed its p->state before coming back.
 
-        metrics_proc_end_cycle(p->pid); // fairness
+        metrics_unschedule(p->pid); // fairness
 
         c->proc = 0;
         found = 1;

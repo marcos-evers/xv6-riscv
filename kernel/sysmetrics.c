@@ -3,20 +3,11 @@
 #include "defs.h"
 
 uint64
-sys_mtime(void)
+sys_gettm(void)
 {
   int t;
   argint(0, &t);
-  uint64 norm = metrics_gettime(t);
-  return norm;
-}
-
-uint64
-sys_mtp(void)
-{
-  int t;
-  argint(0, &t);
-  uint64 norm = metrics_gettp(t);
+  uint64 norm = metrics_gettm(t);
   return norm;
 }
 
@@ -37,8 +28,8 @@ sys_msubsproc(void)
 }
 
 uint64
-sys_mgetfair(void)
+sys_getfm(void)
 {
-  return metrics_get_fairness();
+  return metrics_getfm();
 }
 

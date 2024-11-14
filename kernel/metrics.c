@@ -5,19 +5,15 @@
 #include "param.h"
 #include "metrics.h"
 
-#define RESET_METRIC(x, t)\
+#define RESET_TIME_METRIC(x)\
   acquire(&x.lock);\
-  x = (struct t){0};\
+  x.total = 0;\
   release(&x.lock);
 
 
 struct timemetric tmtable[] = {
 [TIMEFS] {{ 0 }},
 [TIMEMM] {{ 0 }}
-};
-
-struct tpmetric tptable[] = {
-[THROUGHPUT] {{ 0 }}
 };
 
 struct fairmetric fairtable[] = {
@@ -29,20 +25,18 @@ metrics_init(void)
 {
 	initlock(&tmtable[TIMEFS].lock, "timefs");
 	initlock(&tmtable[TIMEMM].lock, "timemm");
-
-	initlock(&tptable[THROUGHPUT].lock, "throughput");
-
 	initlock(&fairtable[FAIRNESS].lock, "fairness");
 }
 
 void
 metrics_reset(void)
 {
-	RESET_METRIC(tmtable[TIMEMM], timemetric);
-	RESET_METRIC(tmtable[TIMEFS], timemetric);
+  RESET_TIME_METRIC(tmtable[TIMEMM]);
+  RESET_TIME_METRIC(tmtable[TIMEFS]);
 
-	RESET_METRIC(tptable[THROUGHPUT], tpmetric);
-	RESET_METRIC(fairtable[FAIRNESS], fairmetric);
+  for (int i = 0; i < NPROC; i++)
+    fairtable[FAIRNESS].procs[i].pid = 0;
+  fairtable[FAIRNESS].n_proc = 0;
 }
 
 void
@@ -51,50 +45,20 @@ metrics_timeadd(uint t, uint64 time)
   struct timemetric* tm = &tmtable[t];
 
 	acquire(&tm->lock);
-
-	++tm->num;
 	tm->total += time;
-
 	release(&tm->lock);
 }
 
 uint64
-metrics_gettime(uint t) {
+metrics_gettm(uint t) {
+  uint64 tot;
   struct timemetric* tm = &tmtable[t];
 
 	acquire(&tm->lock);
-	uint64 avg = 10 * tm->total / tm->num;
+	tot = tm->total;
 	release(&tm->lock);
 
-	return avg;
-}
-
-uint64
-metrics_gettp(uint t) {
-  struct tpmetric* tp = &tptable[t];
-
-	acquire(&tp->lock);
-	uint64 avg = 100 * tp->nexited / tp->ntick;
-	release(&tp->lock);
-
-	return avg;
-}
-
-void
-metrics_tick()
-{
-	struct tpmetric *tpmetric = &tptable[THROUGHPUT];
-
-	acquire(&tpmetric->lock);
-	++tpmetric->ntick;
-	release(&tpmetric->lock);
-}
-
-void
-metrics_proc_exited()
-{
-  // TODO add lock acquire here
-	++tptable[THROUGHPUT].nexited;
+	return tot;
 }
 
 void
@@ -104,8 +68,7 @@ metrics_subscribe_proc(int pid)
 
 	acquire(&fm->lock);
 
-	if (fm->n_proc < NPROC)
-	{
+	if (fm->n_proc < NPROC) {
 		fm->procs[fm->n_proc++].pid = pid;
 	}
 
@@ -113,63 +76,56 @@ metrics_subscribe_proc(int pid)
 }
 
 void
-metrics_proc_start_cycle(int pid)
+metrics_schedule(int pid)
 {
+  struct process *p;
 	struct fairmetric *fm = &fairtable[FAIRNESS];
 
 	acquire(&fm->lock);
 
-	int i;
-	for (i = 0; i < fm->n_proc; ++i)
-	{
-		if (fm->procs[i].pid == pid)
-		{
-			if (fm->procs[i].end != 0)
-			{
-				panic("fairness metric start");
-			}
+  for (p = &fm->procs[0]; p < fm->procs + fm->n_proc && p->pid != pid; p++);
 
-			fm->procs[i].start = r_time();
-			break;
-		}
-	}
+  if (p == fm->procs + fm->n_proc) {
+    goto noproc;
+  }
+  if (p->start != 0) {
+    panic("fairness metric start");
+  }
+  p->start = r_time();
 
+noproc:
 	release(&fm->lock);
 }
 
 void
-metrics_proc_end_cycle(int pid)
+metrics_unschedule(int pid)
 {
+	uint i;
 	struct fairmetric *fm = &fairtable[FAIRNESS];
 
 	acquire(&fm->lock);
 
-	int i;
 	for (i = 0; i < fm->n_proc && fm->procs[i].pid != pid; ++i);
 
-	if (i == fm->n_proc)
-	{
+	if (i == fm->n_proc) {
 		release(&fm->lock);
 		return;
 	}
 
 	struct process *proc = &fm->procs[i];
 
-	if (proc->start == 0)
-	{
+	if (proc->start == 0) {
 		panic("fairness metric end");
 	}
 
-	proc->end = r_time();
-
-	proc->time += proc->end - proc->start;
-	proc->end = proc->start = 0;
+	proc->time += r_time() - proc->start;
+	proc->start = 0;
 
 	release(&fm->lock);
 }
 
 uint64
-metrics_get_fairness()
+metrics_getfm()
 {
 	uint64 result;
 	uint64 sum = 0, sq_sum = 0;
@@ -181,6 +137,7 @@ metrics_get_fairness()
 	uint64 time;
 	for (int i = 0; i < fm->n_proc; ++i)
 	{
+    // TODO review that
 		// dividing by 1000. less precision but prevents overflow
 		time = fm->procs[i].time / 1000;
 		
