@@ -85,7 +85,7 @@ sys_read(void)
   ret = fileread(f, p, n); 
   end = r_time();
 
-  metrics_timeadd(TIMEIO, end - start);
+  metrics_timeadd(TIMEFS, end - start);
 
   return ret;
 }
@@ -108,7 +108,7 @@ sys_write(void)
   ret = filewrite(f, p, n);
   end = r_time();
 
-  metrics_timeadd(TIMEIO, end - start);
+  metrics_timeadd(TIMEFS, end - start);
 
   return ret;
 }

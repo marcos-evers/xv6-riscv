@@ -5,38 +5,44 @@
 #include "param.h"
 #include "metrics.h"
 
+#define RESET_METRIC(x, t)\
+  acquire(&x.lock);\
+  x = (struct t){0};\
+  release(&x.lock);
+
+
 struct timemetric tmtable[] = {
-	[TIMEIO] {{ 0 }},
-	[TIMEFS] {{ 0 }},
-	[TIMEMM] {{ 0 }}
+[TIMEFS] {{ 0 }},
+[TIMEMM] {{ 0 }}
 };
 
 struct tpmetric tptable[] = {
-	[THROUGHPUT] {{ 0 }}
+[THROUGHPUT] {{ 0 }}
 };
 
 struct fairmetric fairtable[] = {
-		[FAIRNESS]
-		{{ 0 } }};
+[FAIRNESS] {{ 0 }}
+};
 
 void
-metrics_reset(void)
+metrics_init(void)
 {
-	tmtable[TIMEIO] = (struct timemetric){0};
-	tmtable[TIMEFS] = (struct timemetric){0};
-	tmtable[TIMEMM] = (struct timemetric){0};
-
-	tptable[THROUGHPUT] = (struct tpmetric){0};
-	fairtable[FAIRNESS] = (struct fairmetric){0};
-
-  // TODO move this to a metrics_init()
-	initlock(&tmtable[TIMEIO].lock, "timeio");
 	initlock(&tmtable[TIMEFS].lock, "timefs");
 	initlock(&tmtable[TIMEMM].lock, "timemm");
 
 	initlock(&tptable[THROUGHPUT].lock, "throughput");
 
 	initlock(&fairtable[FAIRNESS].lock, "fairness");
+}
+
+void
+metrics_reset(void)
+{
+	RESET_METRIC(tmtable[TIMEMM], timemetric);
+	RESET_METRIC(tmtable[TIMEFS], timemetric);
+
+	RESET_METRIC(tptable[THROUGHPUT], tpmetric);
+	RESET_METRIC(fairtable[FAIRNESS], fairmetric);
 }
 
 void

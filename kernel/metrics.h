@@ -1,6 +1,5 @@
-#define TIMEIO 0
-#define TIMEFS 1
-#define TIMEMM 2
+#define TIMEFS 0
+#define TIMEMM 1
 
 #define THROUGHPUT 0
 
