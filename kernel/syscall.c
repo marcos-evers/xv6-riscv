@@ -133,9 +133,9 @@ static uint64 (*syscalls[])(void) = {
 [SYS_close]   sys_close,
 [SYS_lseek]   sys_lseek,
 [SYS_mreset]  sys_mreset,
-[SYS_msubsproc]       sys_msubsproc,
-[SYS_getfm]        sys_getfm,
-[SYS_gettm]        sys_gettm,
+[SYS_msubsproc] sys_msubsproc,
+[SYS_getfm]   sys_getfm,
+[SYS_gettm]   sys_gettm,
 };
 
 void
