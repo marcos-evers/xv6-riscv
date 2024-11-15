@@ -380,9 +380,6 @@ exit(int status)
 
   release(&wait_lock);
 
-  // for throughput metric
-  metrics_proc_exited();
-
   // Jump into the scheduler, never to return.
   sched();
   panic("zombie exit");

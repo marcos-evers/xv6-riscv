@@ -23,9 +23,10 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int lseek(int, int, int);
-uint64 mtime(uint);
-uint64 mtp(uint);
 void mreset(void);
+void msubsproc(int);
+uint64 getfm(void);
+uint64 gettm(int);
 
 // ulib.c
 int stat(const char*, struct stat*);

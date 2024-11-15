@@ -193,12 +193,14 @@ void            virtio_disk_rw(struct buf *, int);
 void            virtio_disk_intr(void);
 
 // metrics.c
+void            metrics_init(void);
 void            metrics_reset(void);
 void            metrics_timeadd(uint, uint64);
-uint64          metrics_gettime(uint);
-uint64          metrics_gettp(uint);
-void            metrics_tick(void);
-void            metrics_proc_exited();
+uint64          metrics_gettm(uint);
+void            metrics_subscribe_proc(int pid);
+void            metrics_schedule(int pid);
+void            metrics_unschedule(int pid);
+uint64          metrics_getfm(void);
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))

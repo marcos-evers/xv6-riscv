@@ -21,6 +21,7 @@
 #define SYS_mkdir  20
 #define SYS_close  21
 #define SYS_lseek  22
-#define SYS_mtime  23
-#define SYS_mtp    24
-#define SYS_mreset 25
+#define SYS_mreset 23
+#define SYS_msubsproc      24
+#define SYS_gettm  25
+#define SYS_getfm 26

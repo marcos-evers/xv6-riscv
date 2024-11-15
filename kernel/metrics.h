@@ -1,19 +1,24 @@
-#define TIMEIO 0
-#define TIMEFS 1
-#define TIMEMM 2
+#define TIMEFS 0
+#define TIMEMM 1
 
-#define THROUGHPUT 0
+#define FAIRNESS 0
 
 struct timemetric {
   struct spinlock lock;
-
   uint64 total;
-  uint num;
+  uint64 num;
 };
 
-struct tpmetric {
-  struct spinlock lock;
+struct process
+{
+  int pid;
+  uint64 time;
+  uint64 start;
+};
 
-  uint ntick;
-  uint nexited;
+struct fairmetric
+{
+  struct spinlock lock;
+  struct process procs[NPROC];
+  uint n_proc;
 };

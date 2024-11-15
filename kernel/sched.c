@@ -82,7 +82,9 @@ scheduler(void)
     release(&procpool.lock);
 
     c->proc = p;
+    metrics_schedule(p->pid);
     swtch(&c->context, &p->context);
+    metrics_unschedule(p->pid);
     c->proc = 0;
     release(&p->lock);
   }
