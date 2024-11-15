@@ -43,7 +43,7 @@ binit(void)
   bcache.head = bcache.numused = 0;
   for(b = bcache.buf; b < bcache.buf+NBUF; b++){
     initsleeplock(&b->lock, "buffer");
-    b->flag = 1;
+    b->flag = b->refcnt = 0;
   }
 }
 
@@ -64,6 +64,7 @@ bget(uint dev, uint blockno)
   for(b = bcache.buf; b < bcache.buf+NBUF; b++){
     if(b->dev == dev && b->blockno == blockno){
       b->refcnt++;
+      b->flag = 1;
       release(&bcache.lock);
       acquiresleep(&b->lock);
       return b;
@@ -79,11 +80,12 @@ bget(uint dev, uint blockno)
     b = &bcache.buf[nhead];
 
     if (b->refcnt > 0) {
-      ;
+      b->flag = 1;
     } else if (b->flag == 1) {
       b->flag = 0;
     } else {
-      bcache.head = nhead;
+      bcache.head = (nhead+1)%NBUF;
+      bcache.numused++;
       b->dev = dev;
       b->blockno = blockno;
       b->valid = 0;
