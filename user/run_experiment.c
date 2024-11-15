@@ -6,22 +6,21 @@
 
 #define NROUNDS 30
 #define NEXPPROC 20
+#define CPMS 10000
 
 void
 spawn_cpubound(uint ncpu)
 {
   int pid;
-  for (int i = 0; i < ncpu; i++) {
+  char* argv[] = {"cpu_bound", 0};
+  for (uint i = 0; i < ncpu; i++) {
     pid = fork();
-    if (pid != 0)
-    {
+    if (pid != 0) {
       // inside parent: subscribe child to fairness metric
       msubsproc(pid);
-      continue;
+    } else {
+      exec(argv[0], argv);
     }
-
-    char* argv[] = {"cpu_bound", 0};
-    exec(argv[0], argv);
   }
 }
 
@@ -29,28 +28,28 @@ void
 spawn_iobound(uint nio)
 {
   int pid;
-  for (int i = 0; i < nio; i++) {
+  for (uint i = 0; i < nio; i++) {
     pid = fork();
-    if (pid != 0)
-    {
+    if (pid != 0) {
       // inside parent: subscribe child to fairness metric
       msubsproc(pid);
-      continue;
+    } else {
+      char name[] = "tmp_##";
+
+      name[4] = i/10 + '0';
+      name[5] = i%10 + '0';
+
+      char* argv[] = {"io_bound", name, 0};
+
+      exec(argv[0], argv);
     }
-
-    char name[] = "tmp_##";
-    name[4] = i/10 + '0';
-    name[5] = i%10 + '0';
-
-    char* argv[] = {"io_bound", name, 0};
-    exec(argv[0], argv);
   }
 }
 
 int
 main(int argc, char** argv)
 {
-  // uint64 tp, fn, fs, mm;
+  uint64 tfs, tmm, fair;
   for (int i = 1; i <= NROUNDS; i++) {
     uint ncpu = rng_range(3 * NEXPPROC / 10, 7 * NEXPPROC / 10); // X
     uint nio = NEXPPROC - ncpu;                                  // Y
@@ -67,18 +66,11 @@ main(int argc, char** argv)
     for (uint num = 0; num < NEXPPROC; num++)
       wait(0);
 
-    // tp = mtp(THROUGHPUT);
-    // fn = mgetfair();
-    // fs = mtime(TIMEFS);
-    // mm = mtime(TIMEMM);
-    //
-    // printf("1000 * E_tp = %ld\n", tp);
-    // printf("1000 * E_fn = %ld\n", fn);
-    // printf("1000 * E_fs = %ld\n", fs);
-    // printf("1000 * E_mm = %ld\n", mm);
+    tfs = gettm(TIMEFS);
+    tmm = gettm(TIMEMM);
+    fair = getfm();
 
-    // S desconsidera lat
-    // printf("1000 * S = %ld\n\n", (tp + fn + fs + mm) / 4);
+    printf("tfs=%lu, tmm=%lu, fair=%lu\n", tfs/CPMS, tmm/CPMS, fair);
   }
   
   exit(0);
