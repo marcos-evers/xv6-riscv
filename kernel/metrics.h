@@ -6,6 +6,7 @@
 struct timemetric {
   struct spinlock lock;
   uint64 total;
+  uint64 num;
 };
 
 struct process

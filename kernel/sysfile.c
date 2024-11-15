@@ -69,7 +69,7 @@ sys_dup(void)
 uint64
 sys_read(void)
 {
-  uint64 start, end;
+  uint64 start;
   int ret = -1;
 
   struct file *f;
@@ -83,9 +83,7 @@ sys_read(void)
 
   start = r_time();
   ret = fileread(f, p, n); 
-  end = r_time();
-
-  metrics_timeadd(TIMEFS, end - start);
+  metrics_timeadd(TIMEFS, r_time() - start);
 
   return ret;
 }
@@ -93,7 +91,7 @@ sys_read(void)
 uint64
 sys_write(void)
 {
-  uint64 start, end, ret;
+  uint64 start, ret;
 
   struct file *f;
   int n;
@@ -106,9 +104,7 @@ sys_write(void)
 
   start = r_time();
   ret = filewrite(f, p, n);
-  end = r_time();
-
-  metrics_timeadd(TIMEFS, end - start);
+  metrics_timeadd(TIMEFS, r_time() - start);
 
   return ret;
 }
@@ -142,7 +138,7 @@ sys_fstat(void)
 uint64
 sys_link(void)
 {
-  uint64 start, end;
+  uint64 start;
 
   char name[DIRSIZ], new[MAXPATH], old[MAXPATH];
   struct inode *dp, *ip;
@@ -179,9 +175,7 @@ sys_link(void)
   iput(ip);
 
   end_op();
-  end = r_time();
-
-  metrics_timeadd(TIMEFS, end - start);
+  metrics_timeadd(TIMEFS, r_time() - start);
 
   return 0;
 
@@ -213,7 +207,7 @@ isdirempty(struct inode *dp)
 uint64
 sys_unlink(void)
 {
-  uint64 start, end;
+  uint64 start;
 
   struct inode *ip, *dp;
   struct dirent de;
@@ -261,9 +255,7 @@ sys_unlink(void)
   iunlockput(ip);
 
   end_op();
-  end = r_time();
-
-  metrics_timeadd(TIMEFS, end - start);
+  metrics_timeadd(TIMEFS, r_time() - start);
 
   return 0;
 
@@ -335,7 +327,7 @@ create(char *path, short type, short major, short minor)
 uint64
 sys_open(void)
 {
-  uint64 start, end;
+  uint64 start;
 
   char path[MAXPATH];
   int fd, omode;
@@ -400,9 +392,7 @@ sys_open(void)
 
   iunlock(ip);
   end_op();
-  end = r_time();
-
-  metrics_timeadd(TIMEFS, end - start);
+  metrics_timeadd(TIMEFS, r_time() - start);
 
   return fd;
 }
@@ -410,7 +400,7 @@ sys_open(void)
 uint64
 sys_mkdir(void)
 {
-  uint64 start, end;
+  uint64 start;
 
   char path[MAXPATH];
   struct inode *ip;
@@ -423,9 +413,7 @@ sys_mkdir(void)
   }
   iunlockput(ip);
   end_op();
-  end = r_time();
-
-  metrics_timeadd(TIMEFS, end - start);
+  metrics_timeadd(TIMEFS, r_time() - start);
 
   return 0;
 }

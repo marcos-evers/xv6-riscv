@@ -7,17 +7,17 @@
 
 #define RESET_TIME_METRIC(x)\
   acquire(&x.lock);\
-  x.total = 0;\
+  x.total = x.num = 0;\
   release(&x.lock);
 
 
 struct timemetric tmtable[] = {
-[TIMEFS] {{ 0 }},
-[TIMEMM] {{ 0 }}
+[TIMEFS] {},
+[TIMEMM] {}
 };
 
 struct fairmetric fairtable[] = {
-[FAIRNESS] {{ 0 }}
+[FAIRNESS] {}
 };
 
 void
@@ -26,6 +26,13 @@ metrics_init(void)
 	initlock(&tmtable[TIMEFS].lock, "timefs");
 	initlock(&tmtable[TIMEMM].lock, "timemm");
 	initlock(&fairtable[FAIRNESS].lock, "fairness");
+
+  RESET_TIME_METRIC(tmtable[TIMEMM]);
+  RESET_TIME_METRIC(tmtable[TIMEFS]);
+
+  for (int i = 0; i < NPROC; i++)
+    fairtable[FAIRNESS].procs[i].pid = 0;
+  fairtable[FAIRNESS].n_proc = 0;
 }
 
 void
@@ -43,9 +50,9 @@ void
 metrics_timeadd(uint t, uint64 time)
 {
   struct timemetric* tm = &tmtable[t];
-
 	acquire(&tm->lock);
 	tm->total += time;
+  tm->num++;
 	release(&tm->lock);
 }
 
@@ -55,7 +62,7 @@ metrics_gettm(uint t) {
   struct timemetric* tm = &tmtable[t];
 
 	acquire(&tm->lock);
-	tot = tm->total;
+	tot = tm->total/tm->num;
 	release(&tm->lock);
 
 	return tot;
@@ -86,14 +93,14 @@ metrics_schedule(int pid)
   for (p = &fm->procs[0]; p < fm->procs + fm->n_proc && p->pid != pid; p++);
 
   if (p == fm->procs + fm->n_proc) {
-    goto noproc;
+    release(&fm->lock);
+    return;
   }
   if (p->start != 0) {
     panic("fairness metric start");
   }
   p->start = r_time();
 
-noproc:
 	release(&fm->lock);
 }
 
