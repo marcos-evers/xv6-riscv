@@ -65,6 +65,7 @@ bget(uint dev, uint blockno)
 
     b = &bcache.buf[ptr];
     if(b->dev == dev && b->blockno == blockno){
+      bcache.numused += b->refcnt == 0;
       b->refcnt++;
       b->flag = 1;
       release(&bcache.lock);
@@ -82,7 +83,7 @@ bget(uint dev, uint blockno)
     b = &bcache.buf[ptr];
 
     if (b->refcnt > 0) {
-      b->flag = 1;
+      ;
     } else if (b->flag == 1) {
       b->flag = 0;
     } else {
