@@ -62,7 +62,8 @@ metrics_gettm(uint t) {
   struct timemetric* tm = &tmtable[t];
 
 	acquire(&tm->lock);
-	tot = tm->total/tm->num;
+  if (tm->num == 0) tot = 0;
+  else tot = tm->total/tm->num;
 	release(&tm->lock);
 
 	return tot;
