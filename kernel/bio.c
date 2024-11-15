@@ -53,15 +53,17 @@ binit(void)
 static struct buf*
 bget(uint dev, uint blockno)
 {
-  uint nhead;
+  uint ptr;
   struct buf *b;
 
   acquire(&bcache.lock);
 
   // Is the block already cached?
-  // TODO: Could be a optimized with hash table
-  // but may be irrelevante for performance
-  for(b = bcache.buf; b < bcache.buf+NBUF; b++){
+  ptr = bcache.head;
+  do {
+    ptr = (ptr-1)&(NBUF-1);
+
+    b = &bcache.buf[ptr];
     if(b->dev == dev && b->blockno == blockno){
       b->refcnt++;
       b->flag = 1;
@@ -69,22 +71,22 @@ bget(uint dev, uint blockno)
       acquiresleep(&b->lock);
       return b;
     }
-  }
+  } while (ptr != bcache.head);
 
   // Not cached and cache is full
   if (bcache.numused == NBUF)
     panic("bget: no buffers");
 
   // Not cached.
-  for(nhead = bcache.head; ; nhead=(nhead+1)%NBUF){
-    b = &bcache.buf[nhead];
+  for(ptr = bcache.head; ; ptr=(ptr+1)&(NBUF-1)){
+    b = &bcache.buf[ptr];
 
     if (b->refcnt > 0) {
       b->flag = 1;
     } else if (b->flag == 1) {
       b->flag = 0;
     } else {
-      bcache.head = (nhead+1)%NBUF;
+      bcache.head = (ptr+1)&(NBUF-1);
       bcache.numused++;
       b->dev = dev;
       b->blockno = blockno;
@@ -131,7 +133,14 @@ brelse(struct buf *b)
 
   releasesleep(&b->lock);
 
-  bunpin(b);
+  acquire(&bcache.lock);
+  b->refcnt--;
+  if (b->refcnt == 0) {
+    bcache.numused--;
+    bcache.head = b - bcache.buf + 1;
+    bcache.head &= NBUF-1;
+  }
+  release(&bcache.lock);
 }
 
 void
@@ -146,7 +155,6 @@ void
 bunpin(struct buf *b) {
   acquire(&bcache.lock);
   b->refcnt--;
-  bcache.numused -= b->refcnt == 0;
   release(&bcache.lock);
 }
 

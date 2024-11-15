@@ -30,8 +30,10 @@ metrics_init(void)
   RESET_TIME_METRIC(tmtable[TIMEMM]);
   RESET_TIME_METRIC(tmtable[TIMEFS]);
 
-  for (int i = 0; i < NPROC; i++)
+  for (int i = 0; i < NPROC; i++) {
     fairtable[FAIRNESS].procs[i].pid = 0;
+    fairtable[FAIRNESS].procs[i].sched = 0;
+  }
   fairtable[FAIRNESS].n_proc = 0;
 }
 
@@ -95,14 +97,13 @@ metrics_schedule(int pid)
 
   if (p == fm->procs + fm->n_proc) {
     release(&fm->lock);
-    return;
+  } else if(p->sched) {
+      panic("fairness metric start");
+  } else  {
+    p->start = r_time();
+    p->sched = 1;
+    release(&fm->lock);
   }
-  if (p->start != 0) {
-    panic("fairness metric start");
-  }
-  p->start = r_time();
-
-	release(&fm->lock);
 }
 
 void
@@ -122,14 +123,11 @@ metrics_unschedule(int pid)
 
 	struct process *proc = &fm->procs[i];
 
-	if (proc->start == 0) {
-		panic("fairness metric end");
-	}
-
-	proc->time += r_time() - proc->start;
-	proc->start = 0;
-
-	release(&fm->lock);
+	if (proc->sched) {
+    proc->time += r_time() - proc->start;
+    proc->start = proc->sched = 0;
+    release(&fm->lock);
+	} else panic("fairness metric end");
 }
 
 uint64
