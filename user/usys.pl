@@ -40,4 +40,5 @@ entry("lseek");
 entry("mreset");
 entry("msubsproc");
 entry("getfm");
-entry("gettm");
+entry("timetotal");
+entry("timenum");

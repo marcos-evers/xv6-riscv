@@ -12,6 +12,7 @@ struct timemetric {
 struct process
 {
   int pid;
+  int sched;
   uint64 time;
   uint64 start;
   uint sched;
