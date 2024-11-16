@@ -30,8 +30,10 @@ metrics_init(void)
   RESET_TIME_METRIC(tmtable[TIMEMM]);
   RESET_TIME_METRIC(tmtable[TIMEFS]);
 
-  for (int i = 0; i < NPROC; i++)
+  for (int i = 0; i < NPROC; i++) {
     fairtable[FAIRNESS].procs[i].pid = 0;
+    fairtable[FAIRNESS].procs[i].sched = 0;
+  }
   fairtable[FAIRNESS].n_proc = 0;
 }
 
@@ -63,7 +65,7 @@ metrics_gettm(uint t) {
 
 	acquire(&tm->lock);
   if (tm->num == 0) tot = 0;
-  else tot = tm->total/tm->num;
+  else tot = tm->total;
 	release(&tm->lock);
 
 	return tot;
@@ -73,11 +75,13 @@ void
 metrics_subscribe_proc(int pid)
 {
 	struct fairmetric *fm = &fairtable[FAIRNESS];
+  uint i = fm->n_proc++;
 
 	acquire(&fm->lock);
 
 	if (fm->n_proc < NPROC) {
-		fm->procs[fm->n_proc++].pid = pid;
+		fm->procs[i].pid = pid;
+		fm->procs[i].sched = 0;
 	}
 
 	release(&fm->lock);
@@ -95,41 +99,35 @@ metrics_schedule(int pid)
 
   if (p == fm->procs + fm->n_proc) {
     release(&fm->lock);
-    return;
-  }
-  if (p->start != 0) {
+  } else if (p->sched) {
     panic("fairness metric start");
+  } else {
+    p->start = r_time();
+    p->sched = 1;
+    release(&fm->lock);
   }
-  p->start = r_time();
-
-	release(&fm->lock);
 }
 
 void
 metrics_unschedule(int pid)
 {
-	uint i;
+  struct process *p;
 	struct fairmetric *fm = &fairtable[FAIRNESS];
 
 	acquire(&fm->lock);
 
-	for (i = 0; i < fm->n_proc && fm->procs[i].pid != pid; ++i);
+	for (p = fm->procs; p < fm->procs + fm->n_proc && p->pid != pid; p++);
 
-	if (i == fm->n_proc) {
+	if (p == fm->procs + fm->n_proc) {
 		release(&fm->lock);
-		return;
-	}
-
-	struct process *proc = &fm->procs[i];
-
-	if (proc->start == 0) {
+	} else if(!p->sched) {
 		panic("fairness metric end");
-	}
-
-	proc->time += r_time() - proc->start;
-	proc->start = 0;
-
-	release(&fm->lock);
+  } else {
+    p->time += r_time() - p->start;
+    p->start = 0;
+    p->sched = 0;
+    release(&fm->lock);
+  }
 }
 
 uint64
@@ -143,11 +141,8 @@ metrics_getfm()
 	acquire(&fm->lock);
 
 	uint64 time;
-	for (int i = 0; i < fm->n_proc; ++i)
-	{
-    // TODO review that
-		// dividing by 1000. less precision but prevents overflow
-		time = fm->procs[i].time / 1000;
+	for (int i = 0; i < fm->n_proc; ++i) {
+		time = fm->procs[i].time;
 		
 		sum += time;
 		sq_sum += time * time;

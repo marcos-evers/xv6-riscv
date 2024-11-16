@@ -50,7 +50,7 @@ spawn_iobound(uint nio)
 int
 main(int argc, char** argv)
 {
-  uint64 tfs, tmm, fair, et =0;
+  uint64 tfs, tmm, fair, et;
   for (int i = 1; i <= NROUNDS; i++) {
     uint ncpu = rng_range(3 * NEXPPROC / 10, 7 * NEXPPROC / 10); // X
     uint nio = NEXPPROC - ncpu;                                  // Y
