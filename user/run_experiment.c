@@ -5,7 +5,7 @@
 #include <kernel/riscv.h>
 #include <user/user.h>
 
-#define NROUNDS 30
+#define NROUNDS 10
 #define NEXPPROC 20
 #define CPMS 10000
 #define CPS (1000*CPMS)
@@ -51,7 +51,8 @@ spawn_iobound(uint nio)
 int
 main(int argc, char** argv)
 {
-  uint64 tfs, tmm, fair, et;
+  uint64 ssum = 0;
+  uint64 tfs, tmm, fair, et, tp, s;
   for (int i = 1; i <= NROUNDS; i++) {
     uint ncpu = rng_range(3 * NEXPPROC / 10, 7 * NEXPPROC / 10); // X
     uint nio = NEXPPROC - ncpu;                                  // Y
@@ -73,9 +74,14 @@ main(int argc, char** argv)
     tfs = timetotal(TIMEFS)/timenum(TIMEFS);
     tmm = timetotal(TIMEMM);
     fair = getfm();
+    tp = (100 * 10 * NEXPPROC) / et;
+    s = (100 * CPS/tfs + 100 * CPS/tmm + fair + tp) / 400;
 
-    printf("E_fs=%lu, M_over=%lu, J=%lu, T_put=%lu\n", CPS/tfs, CPS/tmm, fair, (100 * 10 * NEXPPROC)/et);
+    printf("E_fs=%lu, M_over=%lu, J=%lu, T_put=%lu\n", CPS/tfs, CPS/tmm, fair, tp);
+    printf("Desempenho na rodada = %lu\n", s);
+
+    ssum += s;
   }
-  
+  printf("Desempenho Médio = %lu\n", ssum/NROUNDS);
   exit(0);
 }
