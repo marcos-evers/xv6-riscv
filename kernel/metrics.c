@@ -59,13 +59,24 @@ metrics_timeadd(uint t, uint64 time)
 }
 
 uint64
-metrics_gettm(uint t) {
+metrics_timetotal(uint t) {
   uint64 tot;
   struct timemetric* tm = &tmtable[t];
 
 	acquire(&tm->lock);
-  if (tm->num == 0) tot = 0;
-  else tot = tm->total;
+  tot = tm->total;
+	release(&tm->lock);
+
+	return tot;
+}
+
+uint64
+metrics_timenum(uint t) {
+  uint64 tot;
+  struct timemetric* tm = &tmtable[t];
+
+	acquire(&tm->lock);
+  tot = tm->num;
 	release(&tm->lock);
 
 	return tot;
@@ -142,13 +153,13 @@ metrics_getfm()
 
 	uint64 time;
 	for (int i = 0; i < fm->n_proc; ++i) {
-		time = fm->procs[i].time;
+		time = fm->procs[i].time/1000;
 		
 		sum += time;
 		sq_sum += time * time;
 	}
 
-	result = 1000 * sum * sum / (fm->n_proc * sq_sum);
+	result = 100 * sum * sum / (fm->n_proc * sq_sum);
 
 	release(&fm->lock);
 

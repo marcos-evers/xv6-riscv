@@ -26,7 +26,8 @@ int lseek(int, int, int);
 void mreset(void);
 void msubsproc(int);
 uint64 getfm(void);
-uint64 gettm(int);
+uint64 timetotal(int);
+uint64 timenum(int);
 
 // ulib.c
 int stat(const char*, struct stat*);

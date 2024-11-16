@@ -3,11 +3,20 @@
 #include "defs.h"
 
 uint64
-sys_gettm(void)
+sys_timetotal(void)
 {
   int t;
   argint(0, &t);
-  uint64 norm = metrics_gettm(t);
+  uint64 norm = metrics_timetotal(t);
+  return norm;
+}
+
+uint64
+sys_timenum(void)
+{
+  int t;
+  argint(0, &t);
+  uint64 norm = metrics_timenum(t);
   return norm;
 }
 

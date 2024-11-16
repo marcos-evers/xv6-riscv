@@ -8,6 +8,7 @@
 #define NROUNDS 30
 #define NEXPPROC 20
 #define CPMS 10000
+#define CPS (1000*CPMS)
 
 void
 spawn_cpubound(uint ncpu)
@@ -17,7 +18,7 @@ spawn_cpubound(uint ncpu)
   for (uint i = 0; i < ncpu; i++) {
     pid = fork();
     if (pid != 0) {
-      // inside parent: subscribe child to fairness metric
+      // inside parent: subscribe child to fairness metricmpaulo
       msubsproc(pid);
     } else {
       exec(argv[0], argv);
@@ -69,11 +70,11 @@ main(int argc, char** argv)
       wait(0);
     et = uptime() - et;
 
-    tfs = gettm(TIMEFS);
-    tmm = gettm(TIMEMM);
+    tfs = timetotal(TIMEFS)/timenum(TIMEFS);
+    tmm = timetotal(TIMEMM);
     fair = getfm();
 
-    printf("tfs=%lu ms, tmm=%lu ms, fair=%lu, et=%lu ticks\n", tfs/CPMS, tmm/CPMS, fair, et);
+    printf("E_fs=%lu, M_over=%lu, J=%lu, T_put=%lu\n", CPS/tfs, CPS/tmm, fair, (100 * 10 * NEXPPROC)/et);
   }
   
   exit(0);
