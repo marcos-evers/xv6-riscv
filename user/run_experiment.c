@@ -5,7 +5,7 @@
 #include <kernel/riscv.h>
 #include <user/user.h>
 
-#define NROUNDS 10
+#define NROUNDS 30
 #define NEXPPROC 20
 #define CPMS 10000
 #define CPS (1000*CPMS)
@@ -75,7 +75,7 @@ main(int argc, char** argv)
     tmm = timetotal(TIMEMM);
     fair = getfm();
     tp = (100 * 10 * NEXPPROC) / et;
-    s = (100 * CPS/tfs + 100 * CPS/tmm + fair + tp) / 400;
+    s = (CPS/tfs + CPS/tmm + fair + tp) / 4;
 
     printf("E_fs=%lu, M_over=%lu, J=%lu, T_put=%lu\n", CPS/tfs, CPS/tmm, fair, tp);
     printf("Desempenho na rodada = %lu\n", s);

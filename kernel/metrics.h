@@ -15,7 +15,6 @@ struct process
   int sched;
   uint64 time;
   uint64 start;
-  uint sched;
 };
 
 struct fairmetric
