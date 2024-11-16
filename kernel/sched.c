@@ -6,14 +6,18 @@
 #include "proc.h"
 #include "defs.h"
 
+#define IDX(p) (p - proc)
+
 extern struct proc proc[NPROC];
-uint64 seed;
 
 struct {
   uint nrunnable;
   struct proc* proc[NPROC];
   struct spinlock lock;
 } procpool;
+uint map[NPROC];
+
+static uint64 seed;
 
 static uint64
 next() {
@@ -28,6 +32,9 @@ procswap(uint i, uint j) {
   if (!holding(&procpool.lock))
     panic("sched -> procswitch -> not holding lock");
 
+  map[IDX(procpool.proc[i])] = j;
+  map[IDX(procpool.proc[j])] = i;
+
   struct proc* p = procpool.proc[i];
   procpool.proc[i] = procpool.proc[j];
   procpool.proc[j] = p;
@@ -39,8 +46,10 @@ schedinit(void)
   seed = r_time();
   procpool.nrunnable = 0;
   initlock(&procpool.lock, "procpool");
-  for (uint i = 0; i < NPROC; i++)
+  for (uint i = 0; i < NPROC; i++) {
     procpool.proc[i] = &proc[i];
+    map[i] = i;
+  }
 }
 
 // Per-CPU process scheduler.
@@ -127,8 +136,8 @@ updstate(struct proc *p, uint state)
     return; /* nothing to do */
 
   acquire(&procpool.lock);
-  uint i;
-  for (i = 0; i < NPROC && p != procpool.proc[i]; i++);
+  uint i = map[IDX(p)];
+  // for (i = 0; i < NPROC && p != procpool.proc[i]; i++);
 
   if (p->state == RUNNABLE) procswap(i, --procpool.nrunnable); 
   else if (state == RUNNABLE) procswap(i, procpool.nrunnable++); 
